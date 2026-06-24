@@ -1,0 +1,13 @@
+变量更新规则:
+  输出格式:
+    每次AI输出末尾，在<updatevariable>...</updatevariable>标签中输出本次需要更新的变量，使用JSON Patch格式。
+    不需要更新的变量不需要包含在内。
+
+    格式示例:
+    <updatevariable>
+    [
+      {"op": "replace", "path": "/主角/余额", "value": 30000},
+      {"op": "add", "path": "/主角/能力背包/card_001", "value": {"名称": "...", "稀有度": "R", "分类": "事件", "效果描述": "...", "获得时间": "2012-04-09"}},
+      {"op": "replace", "path": "/主角/抽卡统计/总抽数", "value": 1}
+    ]
+    </updatevariable>
