@@ -1,241 +1,27 @@
-<template>
-  <div class="min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
-    <div class="w-full max-w-md">
-
-      <!-- 加载中 -->
-      <div v-if="!isReady" class="text-center text-gray-400 text-sm py-8">
-        <div class="text-2xl mb-2 animate-pulse">🌸</div>
-        正在连接…
-      </div>
-
-      <!-- 已创建，跳过 -->
-      <div v-else-if="alreadyCreated" class="text-center text-gray-500 text-xs py-4">
-        角色已创建，跳过设定
-      </div>
-
-      <!-- ====== 第一屏：角色创建 ====== -->
-      <div v-else-if="step === 1" class="space-y-5">
-        <div class="text-center">
-          <div class="text-3xl mb-2">🌸</div>
-          <h1 class="text-xl font-bold text-white">你的故事，从这里开始</h1>
-          <p class="text-sm text-gray-400 mt-1">填写基本信息，然后选择你的身份</p>
-        </div>
-
-        <!-- 名字 -->
-        <div>
-          <label class="block text-sm text-gray-300 mb-1">姓名</label>
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="输入你的名字"
-            maxlength="20"
-            class="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-gray-500 focus:outline-none focus:border-pink-400/60 transition-colors"
-          />
-        </div>
-
-        <!-- 性别 -->
-        <div>
-          <label class="block text-sm text-gray-300 mb-1">性别</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              v-for="g in ['男', '女']"
-              :key="g"
-              @click="form.gender = g"
-              class="py-2.5 rounded-lg border transition-all text-sm"
-              :class="form.gender === g
-                ? 'bg-pink-500/20 border-pink-400/50 text-pink-300'
-                : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'"
-            >{{ g === '男' ? '♂' : '♀' }} {{ g }}</button>
-          </div>
-        </div>
-
-        <!-- 自我介绍 -->
-        <div>
-          <label class="block text-sm text-gray-300 mb-1">自我介绍</label>
-          <textarea
-            v-model="form.bio"
-            placeholder="一句话介绍自己，AI 会在开场中引用…"
-            maxlength="100"
-            rows="2"
-            class="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-gray-500 focus:outline-none focus:border-pink-400/60 transition-colors resize-none"
-          ></textarea>
-          <div class="text-right text-xs text-gray-500 mt-0.5">{{ form.bio.length }}/100</div>
-        </div>
-
-        <!-- 下一步 -->
-        <button
-          @click="nextStep"
-          :disabled="!canNext"
-          class="w-full py-3 rounded-lg font-medium text-sm transition-all"
-          :class="canNext
-            ? 'bg-pink-500 hover:bg-pink-400 text-white cursor-pointer'
-            : 'bg-white/5 text-gray-600 cursor-not-allowed'"
-        >下一步 →</button>
-      </div>
-
-      <!-- ====== 第二屏：初始设定 ====== -->
-      <div v-else-if="step === 2" class="space-y-5">
-        <div class="text-center">
-          <div class="text-3xl mb-2">🏫</div>
-          <h1 class="text-xl font-bold text-white">选择你的起点</h1>
-          <p class="text-sm text-gray-400 mt-1">你将以什么身份开始这段故事？</p>
-        </div>
-
-        <!-- 班级选择 -->
-        <div class="space-y-2.5">
-          <button
-            v-for="cls in classes"
-            :key="cls.value"
-            @click="selectClass(cls.value)"
-            class="w-full text-left px-4 py-3 rounded-lg border transition-all"
-            :class="form.class === cls.value
-              ? 'bg-pink-500/10 border-pink-400/40 text-white'
-              : 'bg-white/5 border-white/10 text-gray-300 hover:border-white/20'"
-          >
-            <div class="font-medium text-sm">{{ cls.label }}</div>
-            <div class="text-xs mt-0.5" :class="form.class === cls.value ? 'text-pink-300/70' : 'text-gray-500'">{{ cls.desc }}</div>
-          </button>
-
-          <!-- 自定义 -->
-          <div
-            class="px-4 py-3 rounded-lg border transition-all cursor-pointer"
-            :class="form.class === '__custom__'
-              ? 'bg-pink-500/10 border-pink-400/40'
-              : 'bg-white/5 border-white/10 hover:border-white/20'"
-            @click="selectClass('__custom__')"
-          >
-            <div class="font-medium text-sm text-gray-300">📝 自定义</div>
-            <div class="text-xs text-gray-500 mt-0.5">输入你自己的班级</div>
-            <input
-              v-if="form.class === '__custom__'"
-              v-model="customClass"
-              type="text"
-              placeholder="例如：总武高高三国语科"
-              maxlength="30"
-              class="w-full mt-2 px-3 py-2 rounded-lg bg-white/10 border border-white/15 text-white placeholder-gray-500 text-sm focus:outline-none focus:border-pink-400/60"
-              @click.stop
-            />
-          </div>
-        </div>
-
-        <!-- 底部按钮 -->
-        <div class="flex gap-3">
-          <button
-            @click="step = 1"
-            class="flex-1 py-3 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/20 text-sm transition-all"
-          >← 返回</button>
-          <button
-            @click="confirm"
-            :disabled="!canConfirm"
-            class="flex-[2] py-3 rounded-lg font-medium text-sm transition-all"
-            :class="canConfirm
-              ? 'bg-pink-500 hover:bg-pink-400 text-white cursor-pointer'
-              : 'bg-white/5 text-gray-600 cursor-not-allowed'"
-          >确认并开始 🎉</button>
-        </div>
-      </div>
-
-      <!-- ====== 完成 ====== -->
-      <div v-else-if="step === 3" class="text-center space-y-4">
-        <div class="text-5xl">🌸</div>
-        <h1 class="text-xl font-bold text-white">设定完成</h1>
-        <p class="text-sm text-gray-400">
-          <span class="text-pink-300">{{ finalClassName }}</span> · {{ form.name }}<br>
-          初始金币 <span class="text-amber-400 font-mono">50,000 G</span>
-        </p>
-        <p class="text-xs text-gray-500 animate-pulse">正在载入你的故事…</p>
-      </div>
-
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { Schema } from '../../schema';
-
-const isReady = ref(false);
-const alreadyCreated = ref(false);
-const step = ref(1);
-
-onMounted(async () => {
-  try {
-    await waitGlobalInitialized('Mvu');
-    await waitUntil(() => _.has(getVariables({ type: 'message' }), 'stat_data'));
-    const variables = Mvu.getMvuData({ type: 'message', message_id: getCurrentMessageId() });
-    const statData = Schema.parse(_.get(variables, 'stat_data', {}));
-    if (statData.主角?.姓名) {
-      alreadyCreated.value = true;
-    }
-  } catch {}
-  isReady.value = true;
-});
-
-const form = reactive({
-  name: '',
-  gender: '男',
-  bio: '',
-  class: '',
-});
-
-const customClass = ref('');
-
-const classes = [
-  { value: '总武高高二J班', label: '📚 总武高高二J班', desc: '由比滨结衣、三浦优美子、川崎沙希所在的班级，氛围热闹' },
-  { value: '总武高高二F班', label: '🏀 总武高高二F班', desc: '叶山隼人所在的班级，运动社团活跃，社交中心' },
-  { value: '总武高高一C班', label: '🎀 总武高高一C班', desc: '一色彩羽所在的班级，学妹视角，充满新鲜感' },
-];
-
-const canNext = computed(() => form.name.trim().length > 0);
-
-const finalClassName = computed(() => {
-  if (form.class === '__custom__') return customClass.value || '自定义班级';
-  const found = classes.find(c => c.value === form.class);
-  return found ? found.value : form.class;
-});
-
-const canConfirm = computed(() => {
-  if (!form.class) return false;
-  if (form.class === '__custom__' && !customClass.value.trim()) return false;
-  return true;
-});
-
-function selectClass(val: string) {
-  form.class = val;
-}
-
-function nextStep() {
-  if (!canNext.value) return;
-  step.value = 2;
-}
-
-async function confirm() {
-  if (!canConfirm.value) return;
-  step.value = 3;
-
-  try {
-    await waitGlobalInitialized('Mvu');
-    await waitUntil(() => _.has(getVariables({ type: 'message' }), 'stat_data'));
-
-    const variables = Mvu.getMvuData({ type: 'message', message_id: getCurrentMessageId() });
-    const statData = Schema.parse(_.get(variables, 'stat_data', {}));
-
-    // 写入基本信息
-    statData.主角.姓名 = form.name.trim();
-    statData.主角.性别 = form.gender as '男' | '女';
-    statData.主角.班级 = finalClassName.value;
-    statData.主角.自我介绍 = form.bio.trim();
-
-    // 写入变量
-    const updated = { stat_data: Schema.parse(statData) };
-    await Mvu.replaceMvuData(updated, { type: 'message', message_id: getCurrentMessageId() });
-  } catch (e) {
-    console.error('[开局] 变量写入失败', e);
-  }
-
-  // 延迟关闭，让玩家看到完成页面
-  setTimeout(() => {
-    window.location.reload();
-  }, 2000);
-}
+<template><div class="root"><div class="petals"><span v-for="i in 20" :key="i" class="petal" :style="petalStyle(i)">🌸</span></div><div class="card"><template v-if="!isReady"><div class="loading">🌸</div></template><template v-else-if="alreadyCreated"><div class="skip">角色已创建</div></template><div v-else class="steps"><div class="dot" :class="{a:step===1,d:step>1}"/><div class="ln" :class="{d:step>1}"/><div class="dot" :class="{a:step===2,d:step>2}"/></div><transition name="s" mode="out-in"><div v-if="step===1&&isReady&&!alreadyCreated" key="s1" class="sc"><div class="hd"><div class="ic">🌸</div><h1>你的故事</h1><p>从这里开始</p></div><div class="fd"><label>你的名字</label><input v-model="f.name" placeholder="输入名字…" maxlength="20" autofocus/></div><div class="fd"><label>性别</label><div class="gr"><button v-for="g in ['男','女']" :key="g" :class="['gb',{on:f.gender===g}]" @click="f.gender=g">{{g==='男'?'♂':'♀'}}</button></div></div><div class="fd"><label>自我介绍<span class="opt">选填</span></label><textarea v-model="f.bio" placeholder="一句话，让AI在开场中认识你…" maxlength="100" rows="2"/><div class="ct">{{f.bio.length}}/100</div></div><button :disabled="!canNext" class="bp" @click="nextStep">下一步</button></div><div v-else-if="step===2" key="s2" class="sc"><div class="hd"><div class="ic">🏫</div><h1>选择起点</h1><p>以什么身份进入总武高？</p></div><div class="cl"><button v-for="c in classes" :key="c.v" :class="['cc',{p:f.cls===c.v}]" @click="f.cls=c.v"><span class="ce">{{c.e}}</span><span class="ci"><span class="cn">{{c.l}}</span><span class="cd">{{c.d}}</span></span></button><div :class="['cc cx',{p:f.cls==='__c__'}]" @click="f.cls='__c__'"><span class="ce">📝</span><span class="ci"><span class="cn">自定义班级</span><span class="cd">输入你自己的设定</span></span><input v-if="f.cls==='__c__'" v-model="ccv" placeholder="输入班级…" maxlength="30" class="cxi" @click.stop/></div></div><div class="br"><button class="bb" @click="step=1">← 返回</button><button :disabled="!canConfirm" class="bp" @click="confirm">确认并开始</button></div></div><div v-else-if="step===3" key="s3" class="sc ds"><div class="di">🌸</div><h1 class="dt">设定完成</h1><div class="dc"><div class="dl"><span class="dll">姓名</span><span class="dlv">{{f.name}}</span></div><div class="dl"><span class="dll">性别</span><span class="dlv">{{f.gender}}</span></div><div class="dl"><span class="dll">班级</span><span class="dlv">{{fc}}</span></div><div class="dl"><span class="dll">初始金币</span><span class="dlv g">50,000 G</span></div></div><p class="dw">正在载入你的故事…</p></div></transition></div></div></template>
+<script setup lang="ts">import{ref,reactive,computed,onMounted}from'vue';
+const isReady=ref(false),alreadyCreated=ref(false),step=ref(1);
+onMounted(async()=>{try{const a=(window.top as any)?.AutoCardUpdaterAPI;if(a){const all=a.exportTableAsJson();for(const k of Object.keys(all)){const s=all[k];if(s?.name==='主角信息表'&&s?.content?.length>1){const h=s.content[0],d=s.content[1];if(String(d[h.indexOf('姓名')]??'').trim())alreadyCreated.value=true;}}}}catch(e){}isReady.value=true;});
+const f=reactive({name:'',gender:'男',bio:'',cls:''} as any),ccv=ref('');
+const classes=[{v:'总武高高二J班',e:'📚',l:'高二 J 班',d:'由比滨结衣、三浦优美子、川崎沙希所在，氛围热闹'},{v:'总武高高二F班',e:'🏀',l:'高二 F 班',d:'叶山隼人所在的班级，运动社团活跃'},{v:'总武高高一C班',e:'🎀',l:'高一 C 班',d:'一色彩羽所在，学妹视角，充满新鲜感'}];
+const canNext=computed(()=>f.name.trim().length>0),fc=computed(()=>f.cls==='__c__'?ccv.value||'自定义班级':classes.find(c=>c.v===f.cls)?.v??f.cls);
+const canConfirm=computed(()=>{if(!f.cls)return false;if(f.cls==='__c__'&&!ccv.value.trim())return false;return true;});
+async function confirm(){if(!canConfirm.value)return;step.value=3;try{const a=(window.top as any)?.AutoCardUpdaterAPI;if(a){await a.updateCell('主角信息表',1,'姓名',f.name.trim());await a.updateCell('主角信息表',1,'性别',f.gender);await a.updateCell('主角信息表',1,'班级',fc.value);await a.updateCell('主角信息表',1,'自我介绍',f.bio.trim());}}catch(e){}setTimeout(()=>window.location.reload(),2500);}
+function nextStep(){if(canNext.value)step.value=2;}
+function petalStyle(i:number){return{left:`${Math.random()*100}%`,animationDelay:`${Math.random()*12}s`,animationDuration:`${8+Math.random()*14}s`,fontSize:`${.6+Math.random()*.8}rem`,opacity:.15+Math.random()*.25};}
 </script>
+<style scoped>
+.root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:linear-gradient(160deg,#fce4ec,#f8d8e8,#f3e5f5,#e8eaf6,#fce4ec,#fff3e0);background-size:400% 400%;animation:bg 20s ease-in-out infinite;position:relative;overflow:hidden;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}@keyframes bg{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.petals{position:absolute;inset:0;pointer-events:none;overflow:hidden}.petal{position:absolute;top:-2rem;animation:fall linear infinite}@keyframes fall{0%{transform:translateY(0)rotate(0deg)scale(.8);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(105vh)rotate(720deg)scale(.4);opacity:0}}
+.card{position:relative;z-index:1;width:100%;max-width:400px;background:rgba(255,255,255,.72);backdrop-filter:blur(20px);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);padding:32px 28px 28px;border:1px solid rgba(255,255,255,.6)}
+.steps{display:flex;align-items:center;justify-content:center;margin-bottom:24px}.dot{width:10px;height:10px;border-radius:50%;background:#e0d4d8;transition:all .4s}.dot.a{background:#e8a0b4;box-shadow:0 0 8px rgba(232,160,180,.5);transform:scale(1.3)}.dot.d{background:#d4a0b4}.ln{width:40px;height:1px;background:#e0d4d8;transition:background .4s}.ln.d{background:#d4a0b4}
+.loading{text-align:center;font-size:2rem;padding:40px 0;animation:pulse 2s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}.skip{text-align:center;color:#c0b0b8;font-size:.8rem;padding:20px 0}
+.s-enter-active,.s-leave-active{transition:all .35s ease}.s-enter-from{opacity:0;transform:translateX(24px)}.s-leave-to{opacity:0;transform:translateX(-24px)}
+.sc{display:flex;flex-direction:column;gap:18px}.hd{text-align:center}.ic{width:56px;height:56px;border-radius:50%;margin:0 auto 10px;background:linear-gradient(135deg,#fce4ec,#f8bbd0);display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 16px rgba(248,187,208,.3)}.hd h1{font-size:1.3rem;font-weight:700;color:#4a3038;margin:0}.hd p{font-size:.82rem;color:#b09098;margin:4px 0 0}
+.fd{display:flex;flex-direction:column;gap:6px}.fd label{font-size:.8rem;font-weight:600;color:#6a5058}.opt{font-weight:400;color:#c0a8b0;font-size:.7rem}input[type=text],textarea{width:100%;padding:10px 14px;border:1.5px solid #e8d8e0;border-radius:12px;background:rgba(255,255,255,.7);font-size:.9rem;color:#4a3038;outline:none;transition:all .25s;font-family:inherit;box-sizing:border-box}input:focus,textarea:focus{border-color:#e8a0b4;box-shadow:0 0 0 3px rgba(232,160,180,.12);background:rgba(255,255,255,.9)}::placeholder{color:#c8b8c0}textarea{resize:none}.ct{text-align:right;font-size:.7rem;color:#c8b8c0}
+.gr{display:flex;gap:10px}.gb{flex:1;padding:10px 0;border-radius:12px;border:1.5px solid #e8d8e0;background:rgba(255,255,255,.6);color:#a08890;font-size:.9rem;cursor:pointer;transition:all .25s;font-family:inherit}.gb:hover{border-color:#e8a0b4;color:#6a5058}.gb.on{background:linear-gradient(135deg,#fce4ec,#f8d0dc);border-color:#e8a0b4;color:#b04860;font-weight:600}
+.bp{width:100%;padding:12px 0;border:none;border-radius:14px;background:linear-gradient(135deg,#f0b0c0,#e890a8);color:#fff;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .25s;font-family:inherit;letter-spacing:.02em;box-shadow:0 4px 16px rgba(232,144,168,.3)}.bp:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,144,168,.4)}.bp:active:not(:disabled){transform:scale(.98)}.bp:disabled{background:#e8dce0;color:#c8b8c0;cursor:not-allowed;box-shadow:none}
+.cl{display:flex;flex-direction:column;gap:8px}.cc{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:14px;border:1.5px solid #e8d8e0;background:rgba(255,255,255,.5);cursor:pointer;transition:all .25s;font-family:inherit;text-align:left;color:#4a3038;box-sizing:border-box}.cc:hover{border-color:#e8a0b4;background:rgba(255,255,255,.8)}.cc.p{border-color:#e8a0b4;background:linear-gradient(135deg,rgba(252,228,236,.6),rgba(248,187,208,.3));box-shadow:0 2px 12px rgba(232,160,180,.15)}.ce{font-size:1.4rem;flex-shrink:0}.ci{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.cn{font-size:.85rem;font-weight:600}.cd{font-size:.72rem;color:#a08890}.cx{flex-wrap:wrap}.cxi{width:100%;margin-top:10px;padding:9px 12px;border:1.5px solid #e8d8e0;border-radius:10px;background:rgba(255,255,255,.7);font-size:.85rem;color:#4a3038;outline:none;font-family:inherit;box-sizing:border-box}.cxi:focus{border-color:#e8a0b4}
+.br{display:flex;gap:10px}.bb{flex:1;padding:12px 0;border-radius:14px;border:1.5px solid #e8d8e0;background:rgba(255,255,255,.5);color:#a08890;font-size:.9rem;cursor:pointer;transition:all .25s;font-family:inherit}.bb:hover{border-color:#d0b0b8;color:#6a5058}.br .bp{flex:2}
+.ds{align-items:center;text-align:center}.di{font-size:3.5rem;animation:fl 3s ease-in-out infinite}@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}.dt{font-size:1.2rem;color:#4a3038;margin:8px 0 16px}.dc{width:100%;background:rgba(255,255,255,.6);border-radius:14px;padding:16px 20px;display:flex;flex-direction:column;gap:10px;border:1px solid #f0d8e0}.dl{display:flex;justify-content:space-between;align-items:center;font-size:.85rem}.dll{color:#a08890}.dlv{color:#4a3038;font-weight:600}.dlv.g{color:#c89850}.dw{font-size:.75rem;color:#c0a8b0;animation:pulse 2s ease-in-out infinite;margin-top:14px}
+</style>
