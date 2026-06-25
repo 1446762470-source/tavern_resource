@@ -95,7 +95,201 @@
           顺序: 100
         文件: 世界书/角色/一色彩羽
 
+  - 文件夹: 系统
+    条目:
+      - 名称: "任务系统"
+        启用: false
+        激活策略:
+          类型: 蓝灯
+        插入位置:
+          类型: 角色定义之后
+          顺序: 200
+        文件: 世界书/系统/任务系统
+      - 名称: "命运卡牌"
+        启用: false
+        激活策略:
+          类型: 蓝灯
+        插入位置:
+          类型: 角色定义之后
+          顺序: 210
+        文件: 世界书/系统/命运卡牌
+
+  - 文件夹: 数据库表格
+    条目:
+      - 名称: 数据库变量列表
+        启用: true
+        激活策略:
+          类型: 蓝灯
+        插入位置:
+          类型: 指定深度
+          角色: 系统
+          深度: 0
+          顺序: 14800
+        递归:
+          不可被其他条目激活: true
+          不可激活其他条目: true
+        文件: 世界书/数据库表格/数据库变量列表
+
+      - 名称: '[tableEdit]数据库更新规则'
+        启用: true
+        激活策略:
+          类型: 蓝灯
+        插入位置:
+          类型: 指定深度
+          角色: 系统
+          深度: 0
+          顺序: 14800
+        递归:
+          不可被其他条目激活: true
+          不可激活其他条目: true
+        文件: 世界书/数据库表格/数据库更新规则
+
+      - 名称: '[tableEdit]数据库输出格式'
+        启用: true
+        激活策略:
+          类型: 蓝灯
+        插入位置:
+          类型: 指定深度
+          角色: 系统
+          深度: 0
+          顺序: 14800
+        递归:
+          不可被其他条目激活: true
+          不可激活其他条目: true
+        文件: 世界书/数据库表格/数据库输出格式
+
 扩展字段:
+  正则:
+    # 开场设定 — 将占位符替换为前端界面
+    - 正则名称: '[界面]开场设定'
+      id: b50d0bed-ff40-4a25-9ada-14feb4283400
+      启用: true
+      查找表达式: <OpeningSetup/>
+      内容: |-
+        ```
+        <body>
+        <iframe src="https://testingcf.jsdelivr.net/gh/1446762470-source/tavern_resource/dist/%E6%88%91%E7%9A%84%E6%97%A5%E5%B8%B8/%E7%95%8C%E9%9D%A2/%E5%BC%80%E5%9C%BA%E8%AE%BE%E5%AE%9A/index.html" style="width:100%;height:520px;border:none;"></iframe>
+        </body>
+        ```
+      来源:
+        用户输入: false
+        AI输出: true
+      作用于:
+        仅格式显示: true
+        仅格式提示词: false
+
+    # 任务卡片美化 — 将 <daily_tasks> 替换为带样式的任务面板
+    - 正则名称: '[显示]任务卡片'
+      id: e8a1c3f0-2b4d-4e6a-9c8f-1d3b5e7f9a2c
+      启用: true
+      查找表达式: /<daily_tasks>([\s\S]*?)<\/daily_tasks>/gs
+      内容: |-
+        <div style="
+          background:linear-gradient(160deg, #1e1b2e 0%, #252136 100%);
+          border:1px solid #3d3558;
+          border-left:3px solid #c9a44b;
+          border-radius:4px;
+          padding:14px 16px;
+          margin:10px 0;
+          font-family: 'Noto Serif SC', 'PingFang SC', sans-serif;
+        ">
+          <div style="
+            font-size:0.85em;
+            font-weight:600;
+            color:#c9a44b;
+            margin-bottom:10px;
+            letter-spacing:0.05em;
+            border-bottom:1px solid #3d3558;
+            padding-bottom:8px;
+          ">◆ 今日任务</div>
+          <div style="font-size:0.82em;color:#c8c0dc;line-height:1.8;white-space:pre-line;">$1</div>
+        </div>
+      来源:
+        用户输入: false
+        AI输出: true
+      作用于:
+        仅格式显示: true
+        仅格式提示词: false
+
+    # 命运卡牌美化 — 将 <fate_card> 替换为带样式的卡牌面板
+    - 正则名称: '[显示]命运卡牌'
+      id: f9b2d4e1-3c5e-4f7b-9d0e-2c4f6a8b1d3e
+      启用: true
+      查找表达式: /<fate_card>([\s\S]*?)<\/fate_card>/gs
+      内容: |-
+        <div style="
+          background:linear-gradient(160deg, #1e1b2e 0%, #252136 100%);
+          border:1px solid #3d3558;
+          border-left:3px solid #c9a44b;
+          border-radius:4px;
+          padding:14px 16px;
+          margin:10px 0;
+          font-family: 'Noto Serif SC', 'PingFang SC', sans-serif;
+        ">
+          <div style="
+            font-size:0.85em;
+            font-weight:600;
+            color:#c9a44b;
+            margin-bottom:10px;
+            letter-spacing:0.05em;
+            border-bottom:1px solid #3d3558;
+            padding-bottom:8px;
+          ">🃏 命运卡牌</div>
+          <div style="font-size:0.82em;color:#c8c0dc;line-height:1.8;white-space:pre-line;">$1</div>
+        </div>
+      来源:
+        用户输入: false
+        AI输出: true
+      作用于:
+        仅格式显示: true
+        仅格式提示词: false
+
+    # 隐藏 AI 的数值思考过程
+    - 正则名称: '[折叠]隐藏状态思考'
+      id: d1c2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f
+      启用: true
+      查找表达式: /<status_think>[\s\S]*?<\/status_think>/gsi
+      内容: ''
+      来源:
+        用户输入: true
+        AI输出: true
+      作用于:
+        仅格式显示: true
+        仅格式提示词: false
+
+    # 关系状态栏美化
+    - 正则名称: '[显示]关系状态栏'
+      id: e2d3f4a5-6b7c-8d9e-0f1a-2b3c4d5e6f7a
+      启用: true
+      查找表达式: /<status>([\s\S]*?)<\/status>/gs
+      内容: |-
+        <div style="
+          background:linear-gradient(160deg, #1e1b2e 0%, #252136 100%);
+          border:1px solid #3d3558;
+          border-left:3px solid #c9a44b;
+          border-radius:4px;
+          padding:14px 16px;
+          margin:10px 0;
+          font-family: 'Noto Serif SC', 'PingFang SC', sans-serif;
+        ">
+          <div style="
+            font-size:0.85em;
+            font-weight:600;
+            color:#c9a44b;
+            margin-bottom:10px;
+            letter-spacing:0.05em;
+            border-bottom:1px solid #3d3558;
+            padding-bottom:8px;
+          ">◆ 关系状态</div>
+          <div style="font-size:0.82em;color:#c8c0dc;line-height:1.8;">$1</div>
+        </div>
+      来源:
+        用户输入: false
+        AI输出: true
+      作用于:
+        仅格式显示: true
+        仅格式提示词: false
+
   酒馆助手:
     脚本库:
       - 名称: 自动更新角色卡
